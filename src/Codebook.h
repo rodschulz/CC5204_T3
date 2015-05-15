@@ -18,8 +18,11 @@ class Codebook
 {
 public:
 	Codebook(const int _clusterNumber);
+	Codebook(const Codebook &_other);
+	Codebook();
 	~Codebook();
 
+	Codebook &operator=(const Codebook &_other);
 	friend ostream &operator<<(ostream &_stream, const Codebook &_codebook);
 
 	void calculateCodebook(const string &_dataLocation, const int _maxInterationNumber, const double _stopThreshold);
@@ -31,13 +34,9 @@ public:
 private:
 	void buildIndex();
 
-	Mat labels;
 	Mat centers;
 	int clusterNumber;
 	size_t dataHash;
-
-	bool indexBuilt;
-	flann::KDTreeIndexParams indexParams;
 	flann::Index index;
 };
 

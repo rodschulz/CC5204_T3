@@ -31,15 +31,15 @@ int main(int _nargs, char ** _vargs)
 	{
 		if (!Codebook::loadCodebook(inputFolder + className + "/sample/", codebooks))
 		{
-			cout << "Codebook for class " << className << "not found in cache. Calculating new codebook\n";
+			cout << "Codebook for class '" << className << "' not found in cache. Calculating new codebook\n";
 			codebooks.push_back(Codebook(Config::getCodebookClustersNumber()));
 			codebooks.back().calculateCodebook(inputFolder + className + "/sample/", 10000, 0.1);
-			cout << "Saving codebook for class " << className << " to cache file\n";
+			cout << "Saving codebook for class '" << className << "' to cache file\n";
 			codebooks.back().saveToFile("./cache/");
 		}
 	}
 
-	// Create Bow for every image in the train set
+	// Calculate the BoW for each image in the train set
 	for (size_t i = 0; i < classNames.size(); i++)
 	{
 		string className = classNames[i];
@@ -48,8 +48,10 @@ int main(int _nargs, char ** _vargs)
 		Helper::getContentsList(inputFolder + className + "/" + className + "_train/", imageList);
 		for (string imageLocation : imageList)
 		{
-//			Mat kk;
-//			codebook.getBoW(Mat(), kk);
+			Mat descriptors;
+			Helper::calculateImageDescriptors(imageLocation, descriptors);
+			Mat BoW;
+			codebooks[i].getBoW(descriptors, BoW);
 		}
 	}
 

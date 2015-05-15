@@ -23,7 +23,7 @@ public:
 		{
 			for (int j = 0; j < _matrix.cols; j++)
 			{
-				printf(format.c_str(), _matrix.at < T > (i, j));
+				printf(format.c_str(), _matrix.at<T>(i, j));
 			}
 			printf("\n");
 		}
@@ -33,6 +33,7 @@ public:
 	static void getContentsList(const string &_folder, vector<string> &_fileList, const bool _appendToList = false);
 	static void createImageSamples(const string &_inputFolder, const double _sampleSize, const long _seed = -1);
 	static void getClassNames(const string &_inputFolder, vector<string> &_classNames);
+	static void calculateImageDescriptors(const string &_imageLocation, Mat &_descriptors);
 
 private:
 	Helper();

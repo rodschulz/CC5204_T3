@@ -8,15 +8,41 @@
 
 Codebook::Codebook(const int _clusterNumber)
 {
-	Mat labels = Mat();
-	Mat centers = Mat();
+	centers = Mat::zeros(1, 1, CV_32FC1);
 	clusterNumber = _clusterNumber;
 	dataHash = 0;
-	indexBuilt = false;
+}
+
+Codebook::Codebook(const Codebook &_other)
+{
+	centers = _other.centers.clone();
+	clusterNumber = _other.clusterNumber;
+	dataHash = _other.dataHash;
+	index = _other.index;
+}
+
+Codebook::Codebook()
+{
+	centers = Mat::zeros(1, 1, CV_32FC1);
+	clusterNumber = 1;
+	dataHash = 0;
 }
 
 Codebook::~Codebook()
 {
+}
+
+Codebook &Codebook::operator=(const Codebook &_other)
+{
+	if (this != &_other)
+	{
+		centers = _other.centers.clone();
+		clusterNumber = _other.clusterNumber;
+		dataHash = _other.dataHash;
+		index = _other.index;
+	}
+
+	return *this;
 }
 
 ostream &operator<<(ostream &_stream, const Codebook &_codebook)
@@ -46,39 +72,37 @@ void Codebook::calculateCodebook(const string &_dataLocation, const int _maxInte
 	vector<string> imageLocationList;
 	Helper::getContentsList(_dataLocation, imageLocationList);
 
-	Ptr<FeatureDetector> featureExtractor = FeatureDetector::create("HARRIS");
-	Ptr<DescriptorExtractor> descriptorExtractor = DescriptorExtractor::create("SIFT");
-
 	vector<Mat> descriptors;
 	descriptors.reserve(imageLocationList.size());
 
 	string names = "";
 
 	Mat samples;
-	initModule_nonfree();
 	for (string imageLocation : imageLocationList)
 	{
-		Mat image = imread(imageLocation, CV_LOAD_IMAGE_GRAYSCALE);
-
-		vector<KeyPoint> keypoints;
-		featureExtractor->detect(image, keypoints);
+		// Calculate image's descriptors
 		descriptors.push_back(Mat());
-		descriptorExtractor->compute(image, keypoints, descriptors.back());
+		Helper::calculateImageDescriptors(imageLocation, descriptors.back());
 
 		if (samples.rows == 0)
 			descriptors.back().copyTo(samples);
 		else
 			vconcat(samples, descriptors.back(), samples);
 
+		// Concatenate names to create a hash to identify the sample set
 		names += imageLocation.substr(imageLocation.find_last_of('/') + 1);
 	}
 
 	int attempts = 5;
+	Mat labels;
 	kmeans(samples, clusterNumber, labels, TermCriteria(CV_TERMCRIT_ITER | CV_TERMCRIT_EPS, _maxInterationNumber, _stopThreshold), attempts, KMEANS_PP_CENTERS, centers);
 
 	// Hash of the files used for the codebook (just the names for now)
 	hash<string> strHash;
 	dataHash = strHash(names);
+
+	// Build index for future use
+	//index = flann::Index(Mat(centers).reshape(1), flann::KDTreeIndexParams(4));
 }
 
 void Codebook::saveToFile(const string &_destinationFolder) const
@@ -91,9 +115,6 @@ void Codebook::saveToFile(const string &_destinationFolder) const
 
 void Codebook::getBoW(const Mat &_descriptors, Mat &_BoW)
 {
-	if (!indexBuilt)
-		buildIndex();
-
 	_BoW = Mat::zeros(1, centers.rows, CV_32FC1);
 	for (int i = 0; i < _descriptors.rows; i++)
 	{
@@ -106,12 +127,6 @@ void Codebook::getBoW(const Mat &_descriptors, Mat &_BoW)
 
 		Helper::printMatrix<int>(_BoW, 1, "BoW");
 	}
-}
-
-void Codebook::buildIndex()
-{
-	index = flann::Index(Mat(centers).reshape(1), indexParams);
-	indexBuilt = true;
 }
 
 bool Codebook::loadCodebook(const string &_imageSampleLocation, vector<Codebook> &_codebooks)

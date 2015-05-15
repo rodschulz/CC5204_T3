@@ -7,6 +7,10 @@
 #include <dirent.h>
 #include <cstring>
 #include <iostream>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/features2d/features2d.hpp>
+#include <opencv2/nonfree/features2d.hpp>
+#include <opencv2/nonfree/nonfree.hpp>
 
 Helper::Helper()
 {
@@ -99,4 +103,17 @@ void Helper::getClassNames(const string &_inputFolder, vector<string> &_classNam
 	Helper::getContentsList(_inputFolder, _classNames);
 	for (size_t i = 0; i < _classNames.size(); i++)
 		_classNames[i] = _classNames[i].substr(_classNames[i].find_last_of('/') + 1);
+}
+
+void Helper::calculateImageDescriptors(const string &_imageLocation, Mat &_descriptors)
+{
+	Mat image = imread(_imageLocation, CV_LOAD_IMAGE_GRAYSCALE);
+
+	initModule_nonfree();
+	Ptr<FeatureDetector> featureExtractor = FeatureDetector::create("HARRIS");
+	Ptr<DescriptorExtractor> descriptorExtractor = DescriptorExtractor::create("SIFT");
+
+	vector<KeyPoint> keypoints;
+	featureExtractor->detect(image, keypoints);
+	descriptorExtractor->compute(image, keypoints, _descriptors);
 }

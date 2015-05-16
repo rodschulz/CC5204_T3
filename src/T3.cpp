@@ -40,6 +40,7 @@ int main(int _nargs, char ** _vargs)
 	}
 
 	// Calculate the BoW for each image in the train set
+	vector<Mat> BoWs;
 	for (size_t i = 0; i < classNames.size(); i++)
 	{
 		string className = classNames[i];
@@ -50,8 +51,8 @@ int main(int _nargs, char ** _vargs)
 		{
 			Mat descriptors;
 			Helper::calculateImageDescriptors(imageLocation, descriptors);
-			Mat BoW;
-			codebooks[i].getBoW(descriptors, BoW);
+			BoWs.push_back(Mat());
+			codebooks[i].getBoW(descriptors, BoWs.back());
 		}
 	}
 

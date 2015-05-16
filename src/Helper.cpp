@@ -117,3 +117,19 @@ void Helper::calculateImageDescriptors(const string &_imageLocation, Mat &_descr
 	featureExtractor->detect(image, keypoints);
 	descriptorExtractor->compute(image, keypoints, _descriptors);
 }
+
+template<>
+void Helper::printMatrix<int>(const Mat &_matrix, const int _precision, const string &_name)
+{
+	string format = "%d\t";
+
+	printf("%s\n", _name.c_str());
+	for (int i = 0; i < _matrix.rows; i++)
+	{
+		for (int j = 0; j < _matrix.cols; j++)
+		{
+			printf(format.c_str(), _matrix.at<int>(i, j));
+		}
+		printf("\n");
+	}
+}

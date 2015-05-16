@@ -100,9 +100,6 @@ void Codebook::calculateCodebook(const string &_dataLocation, const int _maxInte
 	// Hash of the files used for the codebook (just the names for now)
 	hash<string> strHash;
 	dataHash = strHash(names);
-
-	// Build index for future use
-	//index = flann::Index(Mat(centers).reshape(1), flann::KDTreeIndexParams(4));
 }
 
 void Codebook::saveToFile(const string &_destinationFolder) const
@@ -115,18 +112,18 @@ void Codebook::saveToFile(const string &_destinationFolder) const
 
 void Codebook::getBoW(const Mat &_descriptors, Mat &_BoW)
 {
-	_BoW = Mat::zeros(1, centers.rows, CV_32FC1);
+	index.build(centers, flann::KDTreeIndexParams(4));
+
+	_BoW = Mat::zeros(1, centers.rows, CV_32SC1);
 	for (int i = 0; i < _descriptors.rows; i++)
 	{
 		Mat indices, distances, currentRow;
 		_descriptors.row(i).copyTo(currentRow);
+
 		index.knnSearch(currentRow, indices, distances, 1);
-
-		int tt = indices.type();
-		_BoW.at<float>(1, indices.at<int>(0, 0)) += 1;
-
-		Helper::printMatrix<int>(_BoW, 1, "BoW");
+		_BoW.at<int>(0, indices.at<int>(0, 0)) += 1;
 	}
+	Helper::printMatrix<int>(_BoW, 1, "BoW");
 }
 
 bool Codebook::loadCodebook(const string &_imageSampleLocation, vector<Codebook> &_codebooks)

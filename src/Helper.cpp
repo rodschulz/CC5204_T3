@@ -121,7 +121,7 @@ void Helper::calculateImageDescriptors(const string &_imageLocation, Mat &_descr
 template<>
 void Helper::printMatrix<int>(const Mat &_matrix, const int _precision, const string &_name)
 {
-	string format = "%d\t";
+	string format = "%" + to_string(_precision) + "d\t";
 
 	printf("%s\n", _name.c_str());
 	for (int i = 0; i < _matrix.rows; i++)

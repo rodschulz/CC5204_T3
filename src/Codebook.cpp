@@ -5,6 +5,9 @@
 #include "Codebook.h"
 #include "Helper.h"
 #include <fstream>
+#include <sstream>
+#include <algorithm>
+#include <iterator>
 
 Codebook::Codebook(const int _clusterNumber)
 {
@@ -51,7 +54,7 @@ ostream &operator<<(ostream &_stream, const Codebook &_codebook)
 	int cols = _codebook.centers.cols;
 	int dataType = _codebook.centers.type();
 
-	_stream << _codebook.dataHash << "\n";
+	_stream << _codebook.dataHash << " " << rows << "\n";
 	for (int i = 0; i < rows; i++)
 	{
 		for (int j = 0; j < cols; j++)
@@ -110,23 +113,90 @@ void Codebook::saveToFile(const string &_destinationFolder) const
 	cacheFile.close();
 }
 
-void Codebook::getBoW(const Mat &_descriptors, Mat &_BoW)
+void Codebook::getBoWTF(const Mat &_descriptors, Mat &_BoW)
 {
-	index.build(centers, flann::KDTreeIndexParams(4));
-
-	_BoW = Mat::zeros(1, centers.rows, CV_32SC1);
-	for (int i = 0; i < _descriptors.rows; i++)
+	static bool indexBuilt = false;
+	if (!indexBuilt)
 	{
-		Mat indices, distances, currentRow;
-		_descriptors.row(i).copyTo(currentRow);
-
-		index.knnSearch(currentRow, indices, distances, 1);
-		_BoW.at<int>(0, indices.at<int>(0, 0)) += 1;
+		index.build(centers, flann::KDTreeIndexParams(4));
+		indexBuilt = true;
 	}
-	Helper::printMatrix<int>(_BoW, 1, "BoW");
+
+	if (_descriptors.rows > 0)
+	{
+		// Get frequencies of each word
+		_BoW = Mat::zeros(1, centers.rows, CV_32SC1);
+		for (int i = 0; i < _descriptors.rows; i++)
+		{
+			Mat indices, distances, currentRow;
+			_descriptors.row(i).copyTo(currentRow);
+
+			index.knnSearch(currentRow, indices, distances, 1);
+			_BoW.at<int>(0, indices.at<int>(0, 0)) += 1;
+		}
+
+		Helper::printMatrix<int>(_BoW, 1);
+
+		// Normalize using the total of word to get the TF
+		_BoW *= (1 / _descriptors.rows);
+		Helper::printMatrix<int>(_BoW, 1);
+	}
 }
 
 bool Codebook::loadCodebook(const string &_imageSampleLocation, vector<Codebook> &_codebooks)
 {
-	return false;
+	// Calculate hash of data in sample
+	vector<string> imageLocationList;
+	Helper::getContentsList(_imageSampleLocation, imageLocationList);
+
+	string names = "";
+	for (string imageLocation : imageLocationList)
+		names += imageLocation.substr(imageLocation.find_last_of('/') + 1);
+
+	// Hash of the files used for the codebook (just the names for now)
+	hash<string> strHash;
+	size_t sampleHash = strHash(names);
+	string filename = "./cache/" + to_string(sampleHash) + ".dat";
+
+	bool codebookRead = false;
+	string line;
+	ifstream inputFile;
+	inputFile.open(filename.c_str(), fstream::in);
+	if (inputFile.is_open())
+	{
+		int rows = -1;
+		int cols = -1;
+		int i = 0;
+		while (getline(inputFile, line))
+		{
+			vector<string> tokens;
+			istringstream iss(line);
+			copy(istream_iterator<string>(iss), istream_iterator<string>(), back_inserter(tokens));
+
+			if (rows == -1)
+			{
+				if (tokens.size() != 3)
+					break;
+
+				rows = stoi(tokens[1]);
+				cols = stoi(tokens[2]);
+				_codebooks.push_back(Codebook(rows));
+				_codebooks.back().dataHash = sampleHash;
+				_codebooks.back().centers = Mat::zeros(rows, cols, CV_32FC1);
+			}
+			else
+			{
+				int j = 0;
+				for (string value : tokens)
+				{
+					_codebooks.back().centers.at<float>(i, j++) = stof(value);
+				}
+				i++;
+			}
+		}
+		inputFile.close();
+		codebookRead = rows != -1 ? true : false;
+	}
+
+	return codebookRead;
 }

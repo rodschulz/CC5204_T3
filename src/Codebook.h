@@ -27,7 +27,7 @@ public:
 
 	void calculateCodebook(const string &_dataLocation, const int _maxInterationNumber, const double _stopThreshold);
 	void saveToFile(const string &_destinationFolder) const;
-	void getBoW(const Mat &_descriptor, Mat &_BoW);
+	void getBoWTF(const Mat &_descriptor, Mat &_BoW);
 
 	static bool loadCodebook(const string &_imageSampleLocation, vector<Codebook> &_codebooks);
 

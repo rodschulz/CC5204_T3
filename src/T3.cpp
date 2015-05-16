@@ -37,6 +37,8 @@ int main(int _nargs, char ** _vargs)
 			cout << "Saving codebook for class '" << className << "' to cache file\n";
 			codebooks.back().saveToFile("./cache/");
 		}
+		else
+			cout << "Codebook for class '" << className << "' read from cache\n";
 	}
 
 	// Calculate the BoW for each image in the train set
@@ -52,7 +54,7 @@ int main(int _nargs, char ** _vargs)
 			Mat descriptors;
 			Helper::calculateImageDescriptors(imageLocation, descriptors);
 			BoWs.push_back(Mat());
-			codebooks[i].getBoW(descriptors, BoWs.back());
+			codebooks[i].getBoWTF(descriptors, BoWs.back());
 		}
 	}
 

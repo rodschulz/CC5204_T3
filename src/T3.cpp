@@ -46,16 +46,40 @@ int main(int _nargs, char ** _vargs)
 	for (size_t i = 0; i < classNames.size(); i++)
 	{
 		string className = classNames[i];
+		cout << "Calculating BoW for class " << className << "\n";
 
 		vector<string> imageList;
 		Helper::getContentsList(inputFolder + className + "/" + className + "_train/", imageList);
+		Mat currentClassBoW = Mat::zeros(imageList.size(), codebooks[i].getClusterNumber(), CV_32FC1);
+		BoWs.push_back(currentClassBoW);
+
+		int j = 0;
+		Mat documentCounter = Mat::zeros(1, codebooks[i].getClusterNumber(), CV_32FC1);
+
+		cout << "Calculating frequencies\n";
 		for (string imageLocation : imageList)
 		{
 			Mat descriptors;
 			Helper::calculateImageDescriptors(imageLocation, descriptors);
-			BoWs.push_back(Mat());
-			codebooks[i].getBoWTF(descriptors, BoWs.back());
+			Mat row = currentClassBoW.row(j++);
+			codebooks[i].getBoWTF(descriptors, row);
+
+			for (int k = 0; k < currentClassBoW.cols; k++)
+				documentCounter.at<float>(0, k) += (row.at<float>(0, k) > 0 ? 1 : 0);
 		}
+
+		cout << "Calculating tf-idf\n";
+		// Calculate tf-idf logarithmic factor and then the tf-idf itself
+		for (int k = 0; k < documentCounter.cols; k++)
+			documentCounter.at<float>(0, k) = log((float) imageList.size() / documentCounter.at<float>(0, k));
+		for (int p = 0; p < currentClassBoW.rows; p++)
+		{
+			for (int q = 0; q < currentClassBoW.cols; q++)
+				currentClassBoW.at<float>(p, q) *= documentCounter.at<float>(0, q);
+		}
+
+		Helper::printMatrix<float>(documentCounter, 3);
+		//Helper::printMatrix<float>(currentClassBoW, 3);
 	}
 
 	cout << "Finished\n";

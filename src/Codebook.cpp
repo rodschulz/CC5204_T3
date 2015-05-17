@@ -4,10 +4,12 @@
  */
 #include "Codebook.h"
 #include "Helper.h"
+#include "Config.h"
 #include <fstream>
 #include <sstream>
 #include <algorithm>
 #include <iterator>
+#include <iostream>
 
 Codebook::Codebook(const int _clusterNumber)
 {
@@ -54,7 +56,7 @@ ostream &operator<<(ostream &_stream, const Codebook &_codebook)
 	int cols = _codebook.centers.cols;
 	int dataType = _codebook.centers.type();
 
-	_stream << _codebook.dataHash << " " << rows << "\n";
+	_stream << _codebook.dataHash << " " << rows << " " << cols << "\n";
 	for (int i = 0; i < rows; i++)
 	{
 		for (int j = 0; j < cols; j++)
@@ -78,8 +80,6 @@ void Codebook::calculateCodebook(const string &_dataLocation, const int _maxInte
 	vector<Mat> descriptors;
 	descriptors.reserve(imageLocationList.size());
 
-	string names = "";
-
 	Mat samples;
 	for (string imageLocation : imageLocationList)
 	{
@@ -91,9 +91,6 @@ void Codebook::calculateCodebook(const string &_dataLocation, const int _maxInte
 			descriptors.back().copyTo(samples);
 		else
 			vconcat(samples, descriptors.back(), samples);
-
-		// Concatenate names to create a hash to identify the sample set
-		names += imageLocation.substr(imageLocation.find_last_of('/') + 1);
 	}
 
 	int attempts = 5;
@@ -101,8 +98,12 @@ void Codebook::calculateCodebook(const string &_dataLocation, const int _maxInte
 	kmeans(samples, clusterNumber, labels, TermCriteria(CV_TERMCRIT_ITER | CV_TERMCRIT_EPS, _maxInterationNumber, _stopThreshold), attempts, KMEANS_PP_CENTERS, centers);
 
 	// Hash of the files used for the codebook (just the names for now)
-	hash<string> strHash;
-	dataHash = strHash(names);
+	dataHash = Helper::calculateHash(imageLocationList, clusterNumber);
+}
+
+int Codebook::getClusterNumber() const
+{
+	return clusterNumber;
 }
 
 void Codebook::saveToFile(const string &_destinationFolder) const
@@ -115,31 +116,32 @@ void Codebook::saveToFile(const string &_destinationFolder) const
 
 void Codebook::getBoWTF(const Mat &_descriptors, Mat &_BoW)
 {
-	static bool indexBuilt = false;
-	if (!indexBuilt)
-	{
+//	static bool indexBuilt = false;
+//	if (!indexBuilt)
+//	{
 		index.build(centers, flann::KDTreeIndexParams(4));
-		indexBuilt = true;
+//		indexBuilt = true;
+//	}
+
+	if (_BoW.cols != centers.rows)
+	{
+		cout << "ERROR: wrong dimensions on BoW calculation\n";
+		return;
 	}
 
 	if (_descriptors.rows > 0)
 	{
 		// Get frequencies of each word
-		_BoW = Mat::zeros(1, centers.rows, CV_32SC1);
 		for (int i = 0; i < _descriptors.rows; i++)
 		{
 			Mat indices, distances, currentRow;
 			_descriptors.row(i).copyTo(currentRow);
 
 			index.knnSearch(currentRow, indices, distances, 1);
-			_BoW.at<int>(0, indices.at<int>(0, 0)) += 1;
+			_BoW.at<float>(0, indices.at<int>(0, 0)) += 1;
 		}
-
-		Helper::printMatrix<int>(_BoW, 1);
-
 		// Normalize using the total of word to get the TF
-		_BoW *= (1 / _descriptors.rows);
-		Helper::printMatrix<int>(_BoW, 1);
+		_BoW *= (1 / (float) _descriptors.rows);
 	}
 }
 
@@ -149,13 +151,8 @@ bool Codebook::loadCodebook(const string &_imageSampleLocation, vector<Codebook>
 	vector<string> imageLocationList;
 	Helper::getContentsList(_imageSampleLocation, imageLocationList);
 
-	string names = "";
-	for (string imageLocation : imageLocationList)
-		names += imageLocation.substr(imageLocation.find_last_of('/') + 1);
-
 	// Hash of the files used for the codebook (just the names for now)
-	hash<string> strHash;
-	size_t sampleHash = strHash(names);
+	size_t sampleHash = Helper::calculateHash(imageLocationList, Config::getCodebookClustersNumber());
 	string filename = "./cache/" + to_string(sampleHash) + ".dat";
 
 	bool codebookRead = false;

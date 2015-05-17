@@ -133,3 +133,15 @@ void Helper::printMatrix<int>(const Mat &_matrix, const int _precision, const st
 		printf("\n");
 	}
 }
+
+size_t Helper::calculateHash(const vector<string> &_imageLocationList, const int _clusterNumber)
+{
+	string names = "";
+	for (string location : _imageLocationList)
+		names += location.substr(location.find_last_of('/') + 1);
+
+	names += ("-" + to_string(_clusterNumber));
+
+	hash<string> strHash;
+	return strHash(names);
+}

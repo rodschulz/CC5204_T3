@@ -26,6 +26,7 @@ public:
 	friend ostream &operator<<(ostream &_stream, const Codebook &_codebook);
 
 	void calculateCodebook(const string &_dataLocation, const int _maxInterationNumber, const double _stopThreshold);
+	int getClusterNumber() const;
 	void saveToFile(const string &_destinationFolder) const;
 	void getBoWTF(const Mat &_descriptor, Mat &_BoW);
 

@@ -34,6 +34,7 @@ public:
 	static void createImageSamples(const string &_inputFolder, const double _sampleSize, const long _seed = -1);
 	static void getClassNames(const string &_inputFolder, vector<string> &_classNames);
 	static void calculateImageDescriptors(const string &_imageLocation, Mat &_descriptors);
+	static size_t calculateHash(const vector<string> &_imageLocationList, const int _clusterNumber);
 
 private:
 	Helper();

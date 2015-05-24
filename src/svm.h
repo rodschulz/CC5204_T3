@@ -7,4 +7,15 @@
 
 #endif //CC5204_T3_SVM_H
 
+using namespace std;
+using namespace cv;
 
+class svm
+{
+public:
+    static CvSVM svmTrain(const vector<Mat> _bows);
+
+private:
+    svm();
+    ~svm();
+};

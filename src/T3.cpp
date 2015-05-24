@@ -79,7 +79,7 @@ int main(int _nargs, char ** _vargs)
 			codebooks.push_back(Codebook(Config::getCodebookClustersNumber()));
 			codebooks.back().calculateCodebook(inputFolder + className + "/sample/", 10000, 0.1);
 			cout << "Saving codebook for class '" << className << "' to cache file\n";
-			codebooks.back().saveToFile("./cache/");
+			codebooks.back().saveToFile("../cache/");
 		}
 		else
 			cout << "Codebook for class '" << className << "' read from cache\n";
@@ -92,6 +92,10 @@ int main(int _nargs, char ** _vargs)
 	calculateBoWs(inputFolder, classNames, "test", codebooks, testBoWs);
 
 	// Classification part
+	svm::svmTrain(trainBoWs);
+	//ACA EL SVM
+
+	//Aca una iteracion para usar CvSVM::Predict con cada imagen de test
 
 	cout << "Finished\n";
 	return EXIT_SUCCESS;

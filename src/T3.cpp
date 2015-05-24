@@ -4,6 +4,7 @@
 #include "Helper.h"
 #include "Codebook.h"
 #include "Config.h"
+#include "svm.h"
 
 using namespace std;
 
@@ -13,7 +14,8 @@ int main(int _nargs, char ** _vargs)
 		cout << "Not enough arguments\n";
 
 	string inputFolder = _vargs[1];
-	Config::load("./config/config");
+	cout << inputFolder << endl;
+	Config::load("../config/config");
 
 	// Create a new image sample
 	if (Config::createImageSample())

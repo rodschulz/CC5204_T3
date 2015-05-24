@@ -7,6 +7,48 @@
 
 using namespace std;
 
+void calculateBoWs(const string &_inputFolder, const vector<string> &_classNames, const string &_set, vector<Codebook> &_codebooks, vector<Mat> &_BoWs)
+{
+	for (size_t i = 0; i < _classNames.size(); i++)
+	{
+		string className = _classNames[i];
+		cout << "Calculating BoW for class " << className << " using set " << _set << "\n";
+
+		vector<string> imageList;
+		Helper::getContentsList(_inputFolder + className + "/" + className + "_" + _set + "/", imageList);
+		Mat currentClassBoW = Mat::zeros(imageList.size(), _codebooks[i].getClusterNumber(), CV_32FC1);
+		_BoWs.push_back(currentClassBoW);
+
+		int j = 0;
+		Mat documentCounter = Mat::zeros(1, _codebooks[i].getClusterNumber(), CV_32FC1);
+
+		cout << "Calculating frequencies\n";
+		for (string imageLocation : imageList)
+		{
+			Mat descriptors;
+			Helper::calculateImageDescriptors(imageLocation, descriptors);
+			Mat row = currentClassBoW.row(j++);
+			_codebooks[i].getBoWTF(descriptors, row);
+
+			for (int k = 0; k < currentClassBoW.cols; k++)
+				documentCounter.at<float>(0, k) += (row.at<float>(0, k) > 0 ? 1 : 0);
+		}
+
+		cout << "Calculating tf-idf\n";
+		// Calculate tf-idf logarithmic factor and then the tf-idf itself
+		for (int k = 0; k < documentCounter.cols; k++)
+			documentCounter.at<float>(0, k) = log((float) imageList.size() / documentCounter.at<float>(0, k));
+		for (int p = 0; p < currentClassBoW.rows; p++)
+		{
+			for (int q = 0; q < currentClassBoW.cols; q++)
+				currentClassBoW.at<float>(p, q) *= documentCounter.at<float>(0, q);
+		}
+
+		//Helper::printMatrix<float>(documentCounter, 3);
+		//Helper::printMatrix<float>(currentClassBoW, 3);
+	}
+}
+
 int main(int _nargs, char ** _vargs)
 {
 	if (_nargs < 2)
@@ -41,46 +83,13 @@ int main(int _nargs, char ** _vargs)
 			cout << "Codebook for class '" << className << "' read from cache\n";
 	}
 
-	// Calculate the BoW for each image in the train set
-	vector<Mat> BoWs;
-	for (size_t i = 0; i < classNames.size(); i++)
-	{
-		string className = classNames[i];
-		cout << "Calculating BoW for class " << className << "\n";
+	// Calculate the BoW for each image in each set
+	vector<Mat> trainBoWs, validationBoWs, testBoWs;
+	calculateBoWs(inputFolder, classNames, "train", codebooks, trainBoWs);
+	calculateBoWs(inputFolder, classNames, "val", codebooks, validationBoWs);
+	calculateBoWs(inputFolder, classNames, "test", codebooks, testBoWs);
 
-		vector<string> imageList;
-		Helper::getContentsList(inputFolder + className + "/" + className + "_train/", imageList);
-		Mat currentClassBoW = Mat::zeros(imageList.size(), codebooks[i].getClusterNumber(), CV_32FC1);
-		BoWs.push_back(currentClassBoW);
-
-		int j = 0;
-		Mat documentCounter = Mat::zeros(1, codebooks[i].getClusterNumber(), CV_32FC1);
-
-		cout << "Calculating frequencies\n";
-		for (string imageLocation : imageList)
-		{
-			Mat descriptors;
-			Helper::calculateImageDescriptors(imageLocation, descriptors);
-			Mat row = currentClassBoW.row(j++);
-			codebooks[i].getBoWTF(descriptors, row);
-
-			for (int k = 0; k < currentClassBoW.cols; k++)
-				documentCounter.at<float>(0, k) += (row.at<float>(0, k) > 0 ? 1 : 0);
-		}
-
-		cout << "Calculating tf-idf\n";
-		// Calculate tf-idf logarithmic factor and then the tf-idf itself
-		for (int k = 0; k < documentCounter.cols; k++)
-			documentCounter.at<float>(0, k) = log((float) imageList.size() / documentCounter.at<float>(0, k));
-		for (int p = 0; p < currentClassBoW.rows; p++)
-		{
-			for (int q = 0; q < currentClassBoW.cols; q++)
-				currentClassBoW.at<float>(p, q) *= documentCounter.at<float>(0, q);
-		}
-
-		Helper::printMatrix<float>(documentCounter, 3);
-		//Helper::printMatrix<float>(currentClassBoW, 3);
-	}
+	// Classification part
 
 	cout << "Finished\n";
 	return EXIT_SUCCESS;

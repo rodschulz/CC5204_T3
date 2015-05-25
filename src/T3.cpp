@@ -1,12 +1,16 @@
 #include <stdlib.h>
 #include <iostream>
 #include <string>
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/ml/ml.hpp>
 #include "Helper.h"
 #include "Codebook.h"
 #include "Config.h"
 #include "svm.h"
 
 using namespace std;
+using namespace cv;
 
 void calculateBoWs(const string &_inputFolder, const vector<string> &_classNames, const string &_set, vector<Codebook> &_codebooks, vector<Mat> &_BoWs)
 {
@@ -92,10 +96,19 @@ int main(int _nargs, char ** _vargs)
 	calculateBoWs(inputFolder, classNames, "test", codebooks, testBoWs);
 
 	// Classification part
-	svm::svmTrain(trainBoWs);
-	//ACA EL SVM
+	vector<Mat> dataToTrain;
+	dataToTrain = svm::svmTrain(trainBoWs);
 
-	//Aca una iteracion para usar CvSVM::Predict con cada imagen de test
+	// Model SVM
+	CvSVMParams params;
+	params.svm_type = CvSVM::C_SVC;
+	params.kernel_type = CvSVM::LINEAR;
+	// Finishing criteria
+	params.term_crit = cvTermCriteria(CV_TERMCRIT_ITER, 100, 1e-6);
+
+	// Model SVM
+	CvSVM SVM;
+	SVM.train(dataToTrain[0], dataToTrain[1], Mat(), Mat(), params);
 
 	cout << "Finished\n";
 	return EXIT_SUCCESS;

@@ -13,7 +13,7 @@ using namespace cv;
 class svm
 {
 public:
-    static CvSVM svmTrain(const vector<Mat> _bows);
+    static vector<Mat> svmTrain(const vector<Mat> _bows);
 
 private:
     svm();

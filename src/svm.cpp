@@ -18,7 +18,7 @@ svm::~svm(){
 }
 
 // Set up training data
-CvSVM svm::svmTrain(const vector<Mat> _bows){
+vector<Mat> svm::svmTrain(const vector<Mat> _bows){
 
     int totalImages = 0;
     int totalFeatures = _bows[0].cols;
@@ -43,17 +43,11 @@ CvSVM svm::svmTrain(const vector<Mat> _bows){
         }
     }
 
-    Mat labelsMat(435, 1, CV_32FC1, labels);
+    Mat labelsMat(435, 1, CV_32SC1, labels);
 
-    CvSVMParams params;
-    params.svm_type = CvSVM::C_SVC;
-    params.kernel_type = CvSVM::LINEAR;
-    // Finishing criteria
-    params.term_crit = cvTermCriteria(CV_TERMCRIT_ITER, 100, 1e-6);
+    vector<Mat> dataToTrain;
+    dataToTrain.push_back(trainingData);
+    dataToTrain.push_back(labelsMat);
 
-    // Model SVM
-    CvSVM SVM;
-    SVM.train(trainingData, labelsMat, Mat(), Mat(), params);
-
-    return SVM;
+    return dataToTrain;
 }

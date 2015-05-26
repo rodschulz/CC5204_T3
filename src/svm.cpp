@@ -3,6 +3,9 @@
 //
 
 #include <stdlib.h>
+#include <fstream>
+#include <sstream>
+#include <iterator>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/ml/ml.hpp>
@@ -18,7 +21,7 @@ svm::~svm(){
 }
 
 // Set up training data
-vector<Mat> svm::svmTrain(const vector<Mat> _bows){
+void svm::setUpTrainData(const vector<Mat> _bows, vector<Mat> &_toTrain){
 
     int totalImages = 0;
     int totalFeatures = _bows[0].cols;
@@ -46,8 +49,30 @@ vector<Mat> svm::svmTrain(const vector<Mat> _bows){
     Mat labelsMat(435, 1, CV_32SC1, labels);
 
     vector<Mat> dataToTrain;
-    dataToTrain.push_back(trainingData);
-    dataToTrain.push_back(labelsMat);
+    _toTrain.push_back(trainingData);
+    _toTrain.push_back(labelsMat);
+}
 
-    return dataToTrain;
+// Load SVM parameters
+void svm::loadSVMParams(CvSVMParams &_params, const string &_filename){
+    string line;
+    ifstream inputFile;
+    inputFile.open(_filename.c_str(), fstream::in);
+    if (inputFile.is_open())
+    {
+        while (getline(inputFile, line))
+        {
+            vector<string> tokens;
+            istringstream iss(line);
+            copy(istream_iterator<string>(iss), istream_iterator<string>(), back_inserter(tokens));
+
+            if(tokens[0].compare("C") == 0)
+                _params.svm_type = atoi(tokens[1].c_str());
+            else if(tokens[0].compare("gamma") == 0)
+                _params.kernel_type = atoi(tokens[1].c_str());
+        }
+        inputFile.close();
+    }
+    else
+        cout << "Unable to open SVM params input: " << _filename;
 }

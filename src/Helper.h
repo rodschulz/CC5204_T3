@@ -35,6 +35,7 @@ public:
 	static void getClassNames(const string &_inputFolder, vector<string> &_classNames);
 	static void calculateImageDescriptors(const string &_imageLocation, Mat &_descriptors);
 	static size_t calculateHash(const vector<string> &_imageLocationList, const int _clusterNumber);
+	static void concatMats(vector<Mat> &_vec, Mat &_res);
 
 private:
 	Helper();

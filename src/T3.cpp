@@ -95,20 +95,73 @@ int main(int _nargs, char ** _vargs)
 	calculateBoWs(inputFolder, classNames, "val", codebooks, validationBoWs);
 	calculateBoWs(inputFolder, classNames, "test", codebooks, testBoWs);
 
+	//Mat trainingSet;
+	//Helper::concatMats(trainBoWs, trainingSet);
+	//cout << trainingSet << endl;
+	//cout << trainingSet.size() << endl;
+
+
 	// Classification part
 	vector<Mat> dataToTrain;
-	dataToTrain = svm::svmTrain(trainBoWs);
+	svm::setUpTrainData(trainBoWs, dataToTrain);
+
+	// Initialized with path to parameters file
+	//svm::
 
 	// Model SVM
 	CvSVMParams params;
 	params.svm_type = CvSVM::C_SVC;
-	params.kernel_type = CvSVM::LINEAR;
+	params.kernel_type = CvSVM::RBF;
 	// Finishing criteria
-	params.term_crit = cvTermCriteria(CV_TERMCRIT_ITER, 100, 1e-6);
+	params.term_crit = cvTermCriteria(CV_TERMCRIT_ITER+CV_TERMCRIT_EPS, 1000, 1e-6);
+	//svm::loadSVMParams(params, "../config/svmparams");
+	params.C = 10000;
+	params.gamma = 3;
 
 	// Model SVM
 	CvSVM SVM;
+	cout << "Training SVM model . . ." << endl;
+
 	SVM.train(dataToTrain[0], dataToTrain[1], Mat(), Mat(), params);
+
+	//cout << dataToTrain[0].size() << endl;
+	//cout << dataToTrain[1].size() << endl;
+
+	Mat validationSet;
+	Helper::concatMats(validationBoWs, validationSet);
+
+	int class0, class1, class2;
+	class0 = 0;
+	class1 = 0;
+	class2 = 0;
+
+	cout << validationSet.rows << " images in validation set" << endl;
+	cout << "VALIDATION SET:" << endl;
+	cout << "Class 0: " << validationBoWs[0].rows << " | Class 1: " << validationBoWs[1].rows << " | Class 2: " << validationBoWs[2].rows << endl;
+	cout << "Running classification for validation set" << endl;
+
+	for(int k = 0; k < validationSet.rows; k++){
+		float res = SVM.predict(validationSet.row(k));
+		//cout << res << endl;
+		if(res==0){
+			class0++;
+		}else if(res==1){
+			class1++;
+		}else{
+			class2++;
+		}
+
+	}
+	cout << "CLASSIFICATION RESULTS: " << endl;
+	cout << "Class 0: " << class0 << " | Class 1: " << class1 << " | Class 2: " << class2 << endl;
+
+	/*for(int k = 0; k < validationBoWs[1].rows; k++){
+		class1.push_back(SVM.predict(validationBoWs[1].row(k)));
+	}
+	for(int k = 0; k < validationBoWs[2].rows; k++){
+		class2.push_back(SVM.predict(validationBoWs[2].row(k)));
+	}*/
+
 
 	cout << "Finished\n";
 	return EXIT_SUCCESS;

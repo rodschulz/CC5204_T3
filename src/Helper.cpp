@@ -12,6 +12,8 @@
 #include <opencv2/nonfree/features2d.hpp>
 #include <opencv2/nonfree/nonfree.hpp>
 
+using namespace cv;
+
 Helper::Helper()
 {
 }
@@ -144,4 +146,16 @@ size_t Helper::calculateHash(const vector<string> &_imageLocationList, const int
 
 	hash<string> strHash;
 	return strHash(names);
+}
+
+void Helper::concatMats(vector<Mat> &_vec, Mat &_res){
+	int s = _vec.size();
+	Mat aux;
+	vconcat(_vec[0], _vec[1], aux);
+
+	for(int i = 2; i < s - 1; i++) {
+		vconcat(aux, _vec[i], aux);
+	}
+
+	vconcat(aux, _vec[s-1], _res);
 }

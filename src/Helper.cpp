@@ -75,7 +75,7 @@ void Helper::createImageSamples(const string &_inputFolder, const double _sample
 		string className = classFolder.substr(classFolder.find_last_of('/'));
 
 		vector<string> classContents;
-		Helper::getContentsList(classFolder + className + "_test/", classContents, true);
+		//Helper::getContentsList(classFolder + className + "_test/", classContents, true);
 		Helper::getContentsList(classFolder + className + "_train/", classContents, true);
 		Helper::getContentsList(classFolder + className + "_val/", classContents, true);
 

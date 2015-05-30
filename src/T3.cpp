@@ -60,8 +60,8 @@ int main(int _nargs, char ** _vargs)
 		cout << "Not enough arguments\n";
 
 	string inputFolder = _vargs[1];
-	cout << inputFolder << endl;
-	Config::load("../config/config");
+	cout << "Input folder: " << inputFolder << endl;
+	Config::load("./config/config");
 
 	// Create a new image sample
 	if (Config::createImageSample())
@@ -70,9 +70,8 @@ int main(int _nargs, char ** _vargs)
 		Helper::createImageSamples(inputFolder, Config::getSampleSize());
 	}
 
-	vector<Codebook> codebooks;
-
 	// Generate or load the codebooks
+	vector<Codebook> codebooks;
 	vector<string> classNames;
 	Helper::getClassNames(inputFolder, classNames);
 	for (string className : classNames)
@@ -100,7 +99,6 @@ int main(int _nargs, char ** _vargs)
 	//cout << trainingSet << endl;
 	//cout << trainingSet.size() << endl;
 
-
 	// Classification part
 	vector<Mat> dataToTrain;
 	svm::setUpTrainData(trainBoWs, dataToTrain);
@@ -113,7 +111,7 @@ int main(int _nargs, char ** _vargs)
 	params.svm_type = CvSVM::C_SVC;
 	params.kernel_type = CvSVM::RBF;
 	// Finishing criteria
-	params.term_crit = cvTermCriteria(CV_TERMCRIT_ITER+CV_TERMCRIT_EPS, 1000, 1e-6);
+	params.term_crit = cvTermCriteria(CV_TERMCRIT_ITER + CV_TERMCRIT_EPS, 1000, 1e-6);
 	//svm::loadSVMParams(params, "../config/svmparams");
 	params.C = 10000;
 	params.gamma = 3;
@@ -140,14 +138,20 @@ int main(int _nargs, char ** _vargs)
 	cout << "Class 0: " << validationBoWs[0].rows << " | Class 1: " << validationBoWs[1].rows << " | Class 2: " << validationBoWs[2].rows << endl;
 	cout << "Running classification for validation set" << endl;
 
-	for(int k = 0; k < validationSet.rows; k++){
+	for (int k = 0; k < validationSet.rows; k++)
+	{
 		float res = SVM.predict(validationSet.row(k));
 		//cout << res << endl;
-		if(res==0){
+		if (res == 0)
+		{
 			class0++;
-		}else if(res==1){
+		}
+		else if (res == 1)
+		{
 			class1++;
-		}else{
+		}
+		else
+		{
 			class2++;
 		}
 
@@ -156,12 +160,11 @@ int main(int _nargs, char ** _vargs)
 	cout << "Class 0: " << class0 << " | Class 1: " << class1 << " | Class 2: " << class2 << endl;
 
 	/*for(int k = 0; k < validationBoWs[1].rows; k++){
-		class1.push_back(SVM.predict(validationBoWs[1].row(k)));
-	}
-	for(int k = 0; k < validationBoWs[2].rows; k++){
-		class2.push_back(SVM.predict(validationBoWs[2].row(k)));
-	}*/
-
+	 class1.push_back(SVM.predict(validationBoWs[1].row(k)));
+	 }
+	 for(int k = 0; k < validationBoWs[2].rows; k++){
+	 class2.push_back(SVM.predict(validationBoWs[2].row(k)));
+	 }*/
 
 	cout << "Finished\n";
 	return EXIT_SUCCESS;

@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -113,7 +114,7 @@ int main(int _nargs, char ** _vargs)
 	// Finishing criteria
 	params.term_crit = cvTermCriteria(CV_TERMCRIT_ITER + CV_TERMCRIT_EPS, 1000, 1e-6);
 	//svm::loadSVMParams(params, "../config/svmparams");
-	params.C = 10000;
+	params.C = 1000;
 	params.gamma = 3;
 
 	// Model SVM
@@ -133,15 +134,18 @@ int main(int _nargs, char ** _vargs)
 	class1 = 0;
 	class2 = 0;
 
-	cout << validationSet.rows << " images in validation set" << endl;
-	cout << "VALIDATION SET:" << endl;
-	cout << "Class 0: " << validationBoWs[0].rows << " | Class 1: " << validationBoWs[1].rows << " | Class 2: " << validationBoWs[2].rows << endl;
-	cout << "Running classification for validation set" << endl;
+	ofstream myfile;
+	string outputfilename = "../validation/SampleSize" + to_string(Config::getSampleSize()) + "-ClustersN" + to_string(Config::getCodebookClustersNumber()) + "-Cparam" + to_string(params.C);
+	myfile.open(outputfilename);
+
+	myfile << validationSet.rows << " images in validation set" << endl;
+	myfile << "VALIDATION SET:" << endl;
+	myfile << "Class 0: " << validationBoWs[0].rows << " | Class 1: " << validationBoWs[1].rows << " | Class 2: " << validationBoWs[2].rows << endl;
+	myfile << "Running classification for validation set" << endl;
 
 	for (int k = 0; k < validationSet.rows; k++)
 	{
 		float res = SVM.predict(validationSet.row(k));
-		//cout << res << endl;
 		if (res == 0)
 		{
 			class0++;
@@ -156,15 +160,9 @@ int main(int _nargs, char ** _vargs)
 		}
 
 	}
-	cout << "CLASSIFICATION RESULTS: " << endl;
-	cout << "Class 0: " << class0 << " | Class 1: " << class1 << " | Class 2: " << class2 << endl;
-
-	/*for(int k = 0; k < validationBoWs[1].rows; k++){
-	 class1.push_back(SVM.predict(validationBoWs[1].row(k)));
-	 }
-	 for(int k = 0; k < validationBoWs[2].rows; k++){
-	 class2.push_back(SVM.predict(validationBoWs[2].row(k)));
-	 }*/
+	myfile << "CLASSIFICATION RESULTS: " << endl;
+	myfile << "Class 0: " << class0 << " | Class 1: " << class1 << " | Class 2: " << class2 << endl;
+	myfile.close();
 
 	cout << "Finished\n";
 	return EXIT_SUCCESS;

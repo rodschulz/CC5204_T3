@@ -380,12 +380,12 @@ int main(int _nargs, char ** _vargs)
 	ofstream confMat;
 	string confMatName = "../results/confusionMatrix";
 
-	confMat.open(confMatName, ios::out | ios::app);
+	confMat.open(confMatName, ios::out);
 	confMat << "\t\tReal" << endl;
-	confMat << "\tClass0\tClass1\tClass2" << endl;
-	confMat << "Pred Class 0\t" << class0mat[0] << "\t" << class1mat[0] << "\t" << class2mat[0] << endl;
-	confMat << "Pred Class 1\t" << class0mat[1] << "\t" << class1mat[1] << "\t" << class2mat[1] << endl;
-	confMat << "Pred Class 2\t" << class0mat[2] << "\t" << class1mat[2] << "\t" << class2mat[2] << endl;
+	confMat << "\t" << classNames[0] <<"\t" << classNames[1] << "\t" << classNames[2] << endl;
+	confMat << "Pred " << classNames[0] <<"\t" << class0mat[0] << "\t" << class1mat[0] << "\t" << class2mat[0] << endl;
+	confMat << "Pred " << classNames[1] <<"\t" << class1mat[1] << "\t" << class2mat[1] << endl;
+	confMat << "Pred " << classNames[2] <<"\t" << class1mat[2] << "\t" << class2mat[2] << endl;
 	confMat.close();
 
 	cout << "Finished\n";

@@ -21,7 +21,7 @@ svm::~svm(){
 }
 
 // Set up training data
-void svm::setUpTrainData(const vector<Mat> _bows, vector<Mat> &_toTrain){
+void svm::setUpTrainData(const vector<Mat> _bows, vector<Mat> &_toTrain, const int _labelsSize){
 
     int totalImages = 0;
     int totalFeatures = _bows[0].cols;
@@ -31,7 +31,7 @@ void svm::setUpTrainData(const vector<Mat> _bows, vector<Mat> &_toTrain){
         totalImages += _bows[k].rows;
     }
 
-    int labels [435] = {}; //TODO ojo con esto
+    vector<int> _labelsVector;
     Mat trainingData(totalImages, totalFeatures, CV_32FC1);
 
     int t = 0;
@@ -39,14 +39,14 @@ void svm::setUpTrainData(const vector<Mat> _bows, vector<Mat> &_toTrain){
         Mat currClass = _bows[i];
         int rows = currClass.rows;
         for(int j = 0; j < rows; j++){
-            //labels.push_back(i); // Add the "class label", same for all the class data
-            labels[t] = i;
+            _labelsVector.push_back(i); // Add the "class label", same for all the class data
             currClass.row(j).copyTo(trainingData.row(t));
             t++;
         }
     }
 
-    Mat labelsMat(435, 1, CV_32SC1, labels);
+    int* labels = _labelsVector.data();
+    Mat labelsMat(_labelsSize, 1, CV_32SC1, labels);
 
     vector<Mat> dataToTrain;
     _toTrain.push_back(trainingData);

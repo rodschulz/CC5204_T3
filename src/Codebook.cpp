@@ -153,7 +153,8 @@ bool Codebook::loadCodebook(const string &_imageSampleLocation, vector<Codebook>
 
 	// Hash of the files used for the codebook (just the names for now)
 	size_t sampleHash = Helper::calculateHash(imageLocationList, Config::getCodebookClustersNumber());
-	string filename = "./cache/" + to_string(sampleHash) + ".dat";
+	string filename = "../cache/" + to_string(sampleHash) + ".dat";
+	cout << filename << endl;
 
 	bool codebookRead = false;
 	string line;

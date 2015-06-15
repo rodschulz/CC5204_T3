@@ -36,6 +36,7 @@ public:
 	static void calculateImageDescriptors(const string &_imageLocation, Mat &_descriptors);
 	static size_t calculateHash(const vector<string> &_imageLocationList, const int _clusterNumber);
 	static void concatMats(vector<Mat> &_vec, Mat &_res);
+	static bool fileExists(const char *_filename);
 
 private:
 	Helper();

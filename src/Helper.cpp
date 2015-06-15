@@ -7,6 +7,7 @@
 #include <dirent.h>
 #include <cstring>
 #include <iostream>
+#include <fstream>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/features2d/features2d.hpp>
 #include <opencv2/nonfree/features2d.hpp>
@@ -158,4 +159,10 @@ void Helper::concatMats(vector<Mat> &_vec, Mat &_res){
 	}
 
 	vconcat(aux, _vec[s-1], _res);
+}
+
+bool Helper::fileExists(const char *_filename){
+	std::ifstream infile(_filename);
+	cout << _filename << endl;
+	return infile.good();
 }
